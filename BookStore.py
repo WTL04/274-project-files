@@ -4,13 +4,12 @@ import ArrayQueue
 import RandomQueue
 import DLList
 import SLLQueue
-import MaxQueue
 import ChainedHashTable
 import BinarySearchTree
-import BinaryHeap
+#import BinaryHeap
 #import AdjacencyList
 import time
-
+import MaxQueue
 
 class BookStore:
   '''
@@ -20,11 +19,9 @@ class BookStore:
 
   def __init__(self):
     self.bookCatalog = ArrayList.ArrayList()
-    #updated from arrayqueue to maxqueue
     self.shoppingCart = MaxQueue.MaxQueue()
     self.bookIndices = ChainedHashTable.ChainedHashTable()
     self.sortedTitleIndices = BinarySearchTree.BinarySearchTree()
-
   def loadCatalog(self, fileName: str):
     '''
             loadCatalog: Read the file filenName and creates the array list with all books.
@@ -37,10 +34,9 @@ class BookStore:
       start_time = time.time()
       for line in f:
         (key, title, group, rank, similar) = line.split("^")
-        s = Book.Book(key, title, group, rank, similar)
-        self.bookCatalog.append(s)
-        self.bookIndices.add(key, self.bookCatalog.size() - 1)
-        self.sortedTitleIndices.add(title, self.bookCatalog.size() - 1)
+        b = Book.Book(key, title, group, rank, similar)
+        self.bookCatalog.append(b)
+        self.sortedTitleIndices.add(title, self.bookCatalog.size() -1)
       # The following line is used to calculate the total time
       # of execution
       elapsed_time = time.time() - start_time
@@ -49,7 +45,7 @@ class BookStore:
   def setRandomShoppingCart(self):
     q = self.shoppingCart
     start_time = time.time()
-    self.shoppingCart = RandomQueue.RandomQueue()
+    self.shoppingCart = MaxQueue.MaxQueue()
     while q.size() > 0:
       self.shoppingCart.add(q.remove())
     elapsed_time = time.time() - start_time
@@ -58,7 +54,7 @@ class BookStore:
   def setShoppingCart(self):
     q = self.shoppingCart
     start_time = time.time()
-    self.shoppingCart = ArrayQueue.ArrayQueue()
+    self.shoppingCart = MaxQueue.MaxQueue()
     while q.size() > 0:
       self.shoppingCart.add(q.remove())
     elapsed_time = time.time() - start_time
@@ -84,7 +80,7 @@ class BookStore:
         input: 
             i: positive integer    
         '''
-    # Validating the index. Otherwise it crashes
+    # Validating the index. Otherwise it  crashes
     if i >= 0 and i < self.bookCatalog.size():
       start_time = time.time()
       s = self.bookCatalog.get(i)
@@ -93,7 +89,9 @@ class BookStore:
       if type(added) == bool and added:
         print(f"Added to shopping cart {s} \n{elapsed_time} seconds")
       else:
-        print(f"Attempted to add {s} to shopping cart.\nAddition was not confirmed.")
+        print(
+          f"Attempted to add {s} to shopping cart.\nAddition was not confirmed."
+        )
 
   def searchBookByInfix(self, infix: str, cnt: int):
     '''
@@ -101,18 +99,19 @@ class BookStore:
         input: 
             infix: A string    
         '''
-
-    if cnt <= 0:
-      return
-    num = 0
     start_time = time.time()
-    for i in range(self.bookCatalog.size()):
-      book = self.bookCatalog.get(i)
+
+    count = 0
+
+    for book in self.bookCatalog:
       if infix in book.title:
-        print(f'{book}')
-        num += 1
-        if num >= cnt:
+        print(book)
+        count += 1
+
+        if count == cnt:
           break
+    
+
     elapsed_time = time.time() - start_time
     print(f"searchBookByInfix Completed in {elapsed_time} seconds")
 
@@ -128,85 +127,63 @@ class BookStore:
 
   def getCartBestSeller(self):
     start_time = time.time()
-
-    book = self.shoppingCart.max()  #returns the best selling book in shoppingCart
-
+    book = self.shoppingCart.max()
+    elapsed_time = time.time() - start_time    
     print("getCartBestSeller returned")
     print(book.title)
-
-    elapsed_time = time.time() - start_time
     print(f"Completed in {elapsed_time} seconds")
+
 
   def addBookByKey(self, key):
     start_time = time.time()
-    bin = self.bookIndices.find(key)
-
-    if bin != None:
-      self.shoppingCart.add(self.bookCatalog.get(bin))
-      print(f"Added title: {self.bookCatalog.get(bin).title}")
-
+    book = self.bookIndices.find(key)
+    if book != None:
+      self.shoppingCart.add(self.bookCatalog.get(book))
+      print(f"Added title: {self.bookCatalog.get(book).title}")
     else:
-      print('Book not found.')
-
+      print("Book not found")
+    
     elapsed_time = time.time() - start_time
     print(f"addBookByKey Completed in {elapsed_time} seconds")
 
   def addBookByPrefix(self, prefix):
-
     if prefix != "":
-      book = self.sortedTitleIndices.findNear(prefix)
-
-      if book != None and book.k[0:len(prefix)] == prefix:
-        self.shoppingCart.add(self.bookCatalog.get(book.v))
-        return book.k
-
+      book = self.sortedTitleIndices.find_smallest_greater_node(prefix)
+      if book != None and (book.k[0:len(prefix)] == prefix):
+        b = self.bookCatalog.get(book.v)
+        self.shoppingCart.add(b)
+        return b.title
     else:
       return None
 
-  def bestsellers_with(self, infix, structure, n=0):
-    best_sellers = None
-    if structure == 1:
-      best_sellers = BinarySearchTree.BinarySearchTree()
-    elif structure == 2:
-      best_sellers = BinaryHeap.BinaryHeap()
+    '''if book != None and book.k[0:len(prefix)] == prefix:
+
+      print(f"Added first matched title: {book.k}")
+      self.shoppingCart.add(self.bookCatalog.get(book.v))
+
     else:
-      print("Invalid data structure.")
+      print("Error: Prefix was not found.")'''
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-    if best_sellers is not None:
-      if infix == "":
-        print("Invalid infix.")
-      if n < 0:
-        print("Invaid number of titles.")
-      else:
-        start_time = time.time()
-        #todo
 
-        found_books = []
-        for i in range(self.bookCatalog.size()):
-          book = self.bookCatalog.get(i)
-          if infix in book.title:
-            found_books.append(book)
 
-        if n == 0:
-          n = len(found_books)
 
-        found_books.sort(key=lambda x: int(x.rank), reverse=True)  # Sort by rank (copies sold)
 
-        for i in range(min(n, len(found_books))):
-          if structure == 1:
-            best_sellers.add(int(found_books[i].rank), found_books[i])
-          elif structure == 2:
-            found_books[i].rank = -int(
-              found_books[i].rank)  # Invert ranks for max heap
-            best_sellers.add(found_books[i])
 
-        # Print the books in the selected data structure
-        if structure == 1:
-          for book in best_sellers.in_order():
-            print(book)
-        elif structure == 2:
-          while best_sellers.size() > 0:
-            print(best_sellers.remove())
 
-        elasped_time = time.time() - start_time
-        print(f"Displayed bestseller_with({infix}, {structure}, {n}) in {elasped_time} seconds")
+
+      
+    
+    
+        
+
+  
